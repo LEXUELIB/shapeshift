@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1340" height="1560" viewBox="0 0 1340 1560" font-family='-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif'>
+<defs>
+<marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+</marker>
+<marker id="ahd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+  <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/>
+</marker>
+</defs>
+<rect width="1340" height="1560" fill="#ffffff"/>
+<text x="40" y="52" font-size="27" font-weight="700" fill="#0f172a">Shapeshift 关键实现 · 一次按键发生了什么</text>
+<text x="40" y="79" font-size="14" fill="#64748b">模型只回答「是哪张卡片」，代码回答「值是多少」——两条路径读同一段文本，在渲染层合流。橙色徽标标出本轮中文改造落点。</text>
+<rect x="420" y="104" width="500" height="64" rx="11" fill="#eef4ff" stroke="#7aa7ff" stroke-width="1.6"/>
+<text x="436" y="130" font-size="15.5" font-weight="700" fill="#1b4fa8">用户按键（受控 input）</text>
+<rect x="866.6" y="113" width="41.4" height="20" rx="10" fill="#ea580c"/>
+<text x="887.3000000000001" y="127.5" font-size="11.5" font-weight="700" fill="#fff" text-anchor="middle">中文</text>
+<text x="436" y="154" font-size="13" fill="#3f4a5a">输入法候选窗打开 ⇒ 直接放行，不 preventDefault</text>
+<text x="436" y="173" font-size="13" fill="#3f4a5a">否则拦截 Enter 提交 / Esc 清空 / Tab 预览 / ←→ 选卡片</text>
+<rect x="420" y="190" width="500" height="46" rx="11" fill="#eef4ff" stroke="#7aa7ff" stroke-width="1.6"/>
+<text x="436" y="216" font-size="15.5" font-weight="700" fill="#1b4fa8">text 状态</text>
+<rect x="420" y="258" width="500" height="64" rx="11" fill="#eef4ff" stroke="#7aa7ff" stroke-width="1.6"/>
+<text x="436" y="284" font-size="15.5" font-weight="700" fill="#1b4fa8">useIntent：防抖 120ms · 中断上一次请求 · LRU 缓存</text>
+<text x="436" y="308" font-size="13" fill="#3f4a5a">只有最新一次请求能写状态（reqId 比对），避免旧结果覆盖新结果</text>
+<rect x="962" y="258" width="338" height="64" rx="11" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.6"/>
+<text x="978" y="284" font-size="15.5" font-weight="700" fill="#475569">短输入直接短路</text>
+<text x="978" y="308" font-size="13" fill="#3f4a5a">key.length &lt; 2 ⇒ 返回 noneResult，不发请求</text>
+<path d="M 670 168 L 670 190" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<path d="M 670 236 L 670 258" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<path d="M 920 290 L 962 290" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<path d="M 670 322 L 670 366" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<path d="M 360 366 L 990 366" stroke="#64748b" stroke-width="1.9" fill="none"/>
+<path d="M 360 366 L 360 400" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<path d="M 990 366 L 990 400" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<circle cx="670" cy="366" r="4" fill="#64748b"/>
+<text x="60" y="344" font-size="14" fill="#123c85" font-weight="700" text-anchor="start">① 模型路径 · 只回答「哪张卡片 + 什么信号」</text>
+<rect x="60" y="400" width="600" height="50" rx="11" fill="#e9f0ff" stroke="#6f9bff" stroke-width="1.6"/>
+<text x="76" y="426" font-size="15.5" font-weight="700" fill="#123c85">缓存命中（同一次会话内按文本归一化 key）</text>
+<rect x="60" y="480" width="600" height="52" rx="11" fill="#e9f0ff" stroke="#6f9bff" stroke-width="1.6"/>
+<text x="76" y="506" font-size="15.5" font-weight="700" fill="#123c85">有有效 API key ⇒ POST /api/intent（服务端路由）</text>
+<text x="76" y="530" font-size="13" fill="#3f4a5a">key 只在服务端读取，永不下发浏览器</text>
+<rect x="60" y="562" width="600" height="104" rx="11" fill="#e9f0ff" stroke="#6f9bff" stroke-width="1.6"/>
+<text x="76" y="588" font-size="15.5" font-weight="700" fill="#123c85">classifyWithJev：一次 systemOne 调用，14 个问题并行</text>
+<rect x="606.6" y="571" width="41.4" height="20" rx="10" fill="#ea580c"/>
+<text x="627.3000000000001" y="585.5" font-size="11.5" font-weight="700" fill="#fff" text-anchor="middle">中文</text>
+<text x="76" y="612" font-size="13" fill="#3f4a5a">8×choice（含 intent 的 20 个选项）· 2×score · 4×noul</text>
+<text x="76" y="631" font-size="13" fill="#3f4a5a">timeout 2.5s · retry 0 —— 过期的答案比没有答案更糟</text>
+<text x="76" y="650" font-size="13" fill="#3f4a5a">不生成文本、不做推理链，只返回选项/分数/概率/置信度</text>
+<rect x="60" y="696" width="600" height="50" rx="11" fill="#e9f0ff" stroke="#6f9bff" stroke-width="1.6"/>
+<text x="76" y="722" font-size="15.5" font-weight="700" fill="#123c85">IntentResult：intent + 概率分布 + 11 个信号</text>
+<text x="76" y="746" font-size="13" fill="#3f4a5a">+ latencyMs / questionCount / model / source</text>
+<rect x="60" y="776" width="380" height="104" rx="11" fill="#fff4e6" stroke="#ffb74d" stroke-width="1.6"/>
+<text x="76" y="802" font-size="15.5" font-weight="700" fill="#8a4b00">无 key 或调用失败 ⇒ 离线分类器</text>
+<rect x="386.6" y="785" width="41.4" height="20" rx="10" fill="#ea580c"/>
+<text x="407.3" y="799.5" font-size="11.5" font-weight="700" fill="#fff" text-anchor="middle">中文</text>
+<text x="76" y="826" font-size="13" fill="#3f4a5a">mockClassify：名字里带 model 但不是模型</text>
+<text x="76" y="845" font-size="13" fill="#3f4a5a">纯正则加权，无网络、无账号，是默认路径</text>
+<text x="76" y="864" font-size="13" fill="#3f4a5a">中文改造主战场：实测 1/17 → 17/17</text>
+<path d="M 360 450 L 360 480" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<path d="M 360 532 L 360 562" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<path d="M 360 666 L 360 696" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<path d="M 250 746 L 250 776" fill="none" stroke="#64748b" stroke-width="1.9" stroke-dasharray="6 5" marker-end="url(#ahd)"/>
+<text x="258" y="768" font-size="11.5" fill="#d97706" font-weight="700" text-anchor="start">无 key / 失败降级</text>
+<text x="700" y="344" font-size="14" fill="#12603a" font-weight="700" text-anchor="start">② 确定性路径 · 只回答「值是多少」</text>
+<rect x="700" y="400" width="580" height="50" rx="11" fill="#e9f9ef" stroke="#58c07f" stroke-width="1.6"/>
+<text x="716" y="426" font-size="15.5" font-weight="700" fill="#12603a">parseFor(intent, text) → ParsedMap[intent]</text>
+<text x="716" y="450" font-size="13" fill="#3f4a5a">纯函数：同输入必同输出，不碰网络</text>
+<rect x="700" y="480" width="580" height="104" rx="11" fill="#e9f9ef" stroke="#58c07f" stroke-width="1.6"/>
+<text x="716" y="506" font-size="15.5" font-weight="700" fill="#12603a">20 个 parser，每张卡片一个</text>
+<rect x="1226.6" y="489" width="41.4" height="20" rx="10" fill="#ea580c"/>
+<text x="1247.3" y="503.5" font-size="11.5" font-weight="700" fill="#fff" text-anchor="middle">中文</text>
+<text x="716" y="530" font-size="13" fill="#3f4a5a">chrono 日期 · 金额/单位/数学 · 颜色 · 时区 · 清单切分</text>
+<text x="716" y="549" font-size="13" fill="#3f4a5a">中文改造：chrono.zh ＋ 后天/大后天/周末 · ¥元万亿 · 、和 还是</text>
+<text x="716" y="568" font-size="13" fill="#3f4a5a">+86 手机号 · Asia/Shanghai · cst 消歧 · 中国节假日</text>
+<rect x="700" y="614" width="580" height="68" rx="11" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.6"/>
+<text x="716" y="640" font-size="15.5" font-weight="700" fill="#475569">为什么要把提取交给代码</text>
+<text x="716" y="664" font-size="13" fill="#3f4a5a">模型对数字/日期不可靠且会漂移；代码可测、可复现、零成本</text>
+<text x="716" y="683" font-size="13" fill="#3f4a5a">模型只做它擅长的：带类型的常识判断</text>
+<path d="M 990 450 L 990 480" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<path d="M 990 584 L 990 614" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<path d="M 520 746 L 520 920" fill="none" stroke="#64748b" stroke-width="1.9"/>
+<path d="M 250 880 L 250 920" fill="none" stroke="#64748b" stroke-width="1.9"/>
+<path d="M 250 920 L 670 920" fill="none" stroke="#64748b" stroke-width="1.9"/>
+<path d="M 670 920 L 670 944" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<path d="M 990 682 L 990 1323 L 920 1323" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<text x="1000" y="712" font-size="12" fill="#12603a" text-anchor="start">③ 解析结果沿右侧汇入渲染层</text>
+<text x="40" y="932" font-size="15" font-weight="700" fill="#472689">③ 把抖动变成冷静的界面</text>
+<rect x="420" y="944" width="500" height="104" rx="11" fill="#f4ecff" stroke="#a98cff" stroke-width="1.6"/>
+<text x="436" y="970" font-size="15.5" font-weight="700" fill="#472689">decide.ts：单次结果 → UI 状态（rawState）</text>
+<text x="436" y="994" font-size="13" fill="#3f4a5a">&lt; 0.4 或无意图 ⇒ input（不发卡片）</text>
+<text x="436" y="1013" font-size="13" fill="#3f4a5a">&lt; 0.7 ⇒ ghost（淡淡预览）· 前两名接近 ⇒ choose（「你是不是想要」）</text>
+<text x="436" y="1032" font-size="13" fill="#3f4a5a">≥ 0.7 ⇒ committed（真正落卡）</text>
+<rect x="420" y="1078" width="500" height="88" rx="11" fill="#f4ecff" stroke="#a98cff" stroke-width="1.6"/>
+<text x="436" y="1104" font-size="15.5" font-weight="700" fill="#472689">迟滞：避免卡片在打字时反复横跳</text>
+<text x="436" y="1128" font-size="13" fill="#3f4a5a">挑战者必须连赢 2 次才换卡片；≥ 0.85 可一次直接换</text>
+<text x="436" y="1147" font-size="13" fill="#3f4a5a">已提交的卡片要跌到 &lt; 0.3 才掉回 input</text>
+<rect x="420" y="1196" width="500" height="66" rx="11" fill="#f4ecff" stroke="#a98cff" stroke-width="1.6"/>
+<text x="436" y="1222" font-size="15.5" font-weight="700" fill="#472689">signals.ts：只取当前卡片用到的信号</text>
+<text x="436" y="1246" font-size="13" fill="#3f4a5a">徽章走开/关迟滞带（0.65 开 / 0.45 关），不会闪</text>
+<rect x="420" y="1292" width="500" height="62" rx="11" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="436" y="1318" font-size="15.5" font-weight="700" fill="#334155">registry[intent] → { label, icon, summary, Component }</text>
+<rect x="866.6" y="1301" width="41.4" height="20" rx="10" fill="#ea580c"/>
+<text x="887.3000000000001" y="1315.5" font-size="11.5" font-weight="700" fill="#fff" text-anchor="middle">中文</text>
+<text x="436" y="1342" font-size="13" fill="#3f4a5a">唯一的扩展点：加一张新卡片 = 加一条注册项</text>
+<rect x="420" y="1384" width="500" height="58" rx="11" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+<text x="436" y="1410" font-size="15.5" font-weight="700" fill="#334155">MorphContainer + AnimatePresence → 卡片变形</text>
+<rect x="866.6" y="1393" width="41.4" height="20" rx="10" fill="#ea580c"/>
+<text x="887.3000000000001" y="1407.5" font-size="11.5" font-weight="700" fill="#fff" text-anchor="middle">中文</text>
+<text x="436" y="1434" font-size="13" fill="#3f4a5a">React 19 + Motion：布局动画，reduced-motion 自动降级</text>
+<path d="M 670 1048 L 670 1078" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<path d="M 670 1166 L 670 1196" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<path d="M 670 1262 L 670 1292" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<path d="M 670 1354 L 670 1384" fill="none" stroke="#64748b" stroke-width="1.9" marker-end="url(#ah)"/>
+<rect x="60" y="1466" width="1240" height="74" rx="11" fill="#fffdf2" stroke="#ddc464" stroke-width="1.6"/>
+<text x="76" y="1492" font-size="15.5" font-weight="700" fill="#6b5a0a">三条设计原则</text>
+<text x="76" y="1516" font-size="13" fill="#3f4a5a">1. 流程由代码掌握，模型只提供「可编程的常识判断」——分支、阈值、权重、归一化全是普通代码。</text>
+<text x="76" y="1535" font-size="13" fill="#3f4a5a">2. 一次请求问 14 个问题（speculative fan-out），而不是一次问一个：省往返、延迟可预测。</text>
+<text x="76" y="1554" font-size="13" fill="#3f4a5a">3. 两级降级：没 key 走离线分类器；单次调用失败当次回落离线，界面永不闪烁。</text>
+</svg>

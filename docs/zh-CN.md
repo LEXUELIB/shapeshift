@@ -17,6 +17,42 @@ NEXT_PUBLIC_LOCALE=en bun dev   # 切回英文界面（英文输入解析始终�
 
 不配 `TYPESAFE_API_KEY` 时走内置的离线分类器（`jev-offline`），中文照样可用。
 
+## 关键实现流程图
+
+一次按键发生了什么。核心是**两条路径读同一段文本**：模型只回答「是哪张卡片 + 什么信号」，代码回答「值是多少」，两者在渲染层合流。
+
+```mermaid
+flowchart TD
+  K["用户按键<br/>输入法候选窗打开则放行，其余拦截 Enter / Esc / Tab / 方向键"] --> T["text 状态（受控）"]
+  T --> U["useIntent<br/>防抖 120ms · 中断上一次请求 · LRU 缓存"]
+  U --> M
+  U --> P
+
+  subgraph MODEL["① 模型路径 · 只回答「哪张卡片 + 什么信号」"]
+    direction TB
+    M["缓存命中?（按文本归一化 key）"] --> M2["有有效 key：POST /api/intent（服务端路由）"]
+    M2 --> M3["classifyWithJev：一次 systemOne 调用<br/>14 个问题并行 = 8×choice + 2×score + 4×noul<br/>timeout 2.5s · retry 0"]
+    M3 --> M4["IntentResult<br/>intent + 概率分布 + 11 个信号"]
+    M2 -.->|无 key 或调用失败则降级| M5["mockClassify 离线关键词分类器<br/>纯正则加权，无网络、无账号"]
+  end
+
+  subgraph PARSE["② 确定性路径 · 只回答「值是多少」"]
+    direction TB
+    P["parseFor(intent, text) → ParsedMap[intent]<br/>纯函数：同输入必同输出"] --> P2["20 个 parser，每张卡片一个<br/>chrono 日期 · 金额/单位/数学 · 颜色 · 时区 · 清单切分<br/>中文：chrono.zh · ¥元万亿 · 、和还是 · +86 · Asia/Shanghai"]
+  end
+
+  M4 --> D
+  M5 --> D
+  D["③ decide.ts：单次结果 → UI 状态<br/>0.4 以下 input · 0.7 以下 ghost · 前两名接近 choose · 0.7 以上 committed<br/>迟滞：挑战者连赢 2 次才换，0.85 以上可一次直接换，跌到 0.3 以下才掉回"] --> S["signals.ts：只取当前卡片用到的信号<br/>开/关迟滞带 0.65 / 0.45，不会闪"]
+  S --> R["registry 取 label / icon / summary / Component"]
+  P2 --> R
+  R --> V["MorphContainer + AnimatePresence → 卡片变形"]
+```
+
+也可以看高保真版（可缩放 SVG）：[docs/zh-CN-flow.svg](zh-CN-flow.svg)。
+
+三条设计原则：**流程由代码掌握**（模型只给带类型的常识判断）；**一次请求问 14 个问题**（speculative fan-out，省往返、延迟可预测）；**两级降级**（没 key 走离线分类器，单次调用失败当次回落离线，界面永不闪烁）。
+
 ## 改了什么
 
 ### 1. 输入法（IME）不再被劫持
