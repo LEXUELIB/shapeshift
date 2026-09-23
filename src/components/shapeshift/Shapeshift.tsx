@@ -68,6 +68,8 @@ export function Shapeshift() {
   const flags = useSearchFlags();
   const reduce = useReducedMotion();
   const inputRef = useRef<HTMLInputElement>(null);
+  /** True while an IME candidate window is open (Pinyin, Kana, Hangul…). */
+  const composing = useRef(false);
 
   const [text, setText] = useState("");
   const { result, resultText, status, hud } = useIntent(text);
@@ -224,6 +226,14 @@ export function Shapeshift() {
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // While a Pinyin / Kana IME candidate window is open, Enter, Escape, Tab and
+    // the arrow keys belong to the IME — not to Shapeshift. Without this guard
+    // the Enter that confirms a candidate would commit a half-typed card and
+    // Escape would wipe the input instead of closing the candidate list.
+    // `keyCode === 229` covers browsers that do not set `isComposing` on that
+    // keydown; the ref covers the gap before `compositionend` fires.
+    if (composing.current || e.nativeEvent.isComposing || e.keyCode === 229) return;
+
     const atEnd = e.currentTarget.selectionStart === text.length;
     if (e.key === "/" && text === "") {
       e.preventDefault();
@@ -288,6 +298,12 @@ export function Shapeshift() {
                 }
               }}
               onKeyDown={onKeyDown}
+              onCompositionStart={() => {
+                composing.current = true;
+              }}
+              onCompositionEnd={() => {
+                composing.current = false;
+              }}
               aria-label="Type anything"
               aria-describedby="shapeshift-hint"
               autoComplete="off"
