@@ -2,6 +2,8 @@
 
 **An input that becomes what you mean.** One text box that morphs into the right UI as you type — an event card, a checklist, a timer, a color picker, a bill splitter, a poll, a converter and more.
 
+> **中文支持（本 fork）** — 这个分支让 Shapeshift 真正用中文可用：输入法候选窗不再被 `Enter` 劫持，离线分类器认识中文（同一段离线逻辑 **改造前 1/17 → 改造后 17/17**），日期/金额 `¥元万`/列表分隔符 `、`/时区/手机号/节假日全部本地化，界面默认中文。详见 **[docs/zh-CN.md](docs/zh-CN.md)**。用 `NEXT_PUBLIC_LOCALE=en` 可切回英文界面（英文输入解析始终不变）。
+
 <p align="center">
   <img src="docs/demo.gif" alt="Typing 'dinner with priya friday 8pm on zoom' morphs the text box into an event card, then a shopping checklist" width="820">
   <br>
@@ -46,6 +48,7 @@ Restart `bun dev`. The latency readout in the bottom-right corner switches from 
 | `TYPESAFE_API_KEY` | _(empty)_ | Enables the online model. Empty or placeholder values keep you offline. |
 | `JEV_MODEL` | `jev-1.13.0` | Pinned model version. |
 | `NEXT_PUBLIC_USE_MOCK` | `false` | `true` forces offline even with a key. |
+| `NEXT_PUBLIC_LOCALE` | `zh` | UI language. `en` switches the interface back to English; Chinese *input* is parsed either way. |
 | `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | Used for Open Graph metadata. |
 
 ## Card types
