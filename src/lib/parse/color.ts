@@ -1,5 +1,6 @@
 import type { ColorMood } from "@/lib/jev/types";
 import { hexToOklch, oklchToHex, rgbToHex } from "@/lib/color";
+import { CJK_RE } from "./common";
 
 export type ColorData = {
   hex: string | null;
@@ -161,6 +162,100 @@ export const EVOCATIVE_COLORS: Record<string, string> = {
   sky: "#87ceeb",
 };
 
+/**
+ * Chinese colour words. Hanzi have no word boundaries, so these are matched by
+ * scanning for the longest name that ends furthest right in the text — the
+ * equivalent of the "last word wins" rule used for English.
+ * Longer compounds (天蓝, 薄荷绿, 藏青) therefore beat their head character.
+ */
+export const ZH_NAMED_COLORS: Record<string, string> = {
+  大红: "#f03e3e",
+  朱红: "#f03e3e",
+  玫瑰红: "#e64980",
+  粉红: "#f06595",
+  桃红: "#ff7f6b",
+  珊瑚红: "#ff7f6b",
+  珊瑚: "#ff7f6b",
+  酒红: "#722f37",
+  砖红: "#b22222",
+  中国红: "#f40009",
+  红: "#e03131",
+  樱花粉: "#f4c2c2",
+  芭比粉: "#e0218a",
+  荧光粉: "#ff69b4",
+  粉: "#f06595",
+  橘黄: "#ff8c2b",
+  橘: "#ff7a1a",
+  橙: "#ff7a1a",
+  柠檬黄: "#fff06a",
+  芥末黄: "#d4a017",
+  米黄: "#f7f0dc",
+  奶油色: "#f7f0dc",
+  黄: "#fcc419",
+  米色: "#e8dcc4",
+  奶茶色: "#c5a582",
+  沙色: "#d8c49c",
+  驼色: "#c9a77c",
+  咖啡色: "#6f4e37",
+  巧克力色: "#5d3a1a",
+  棕: "#8b5a2b",
+  橄榄绿: "#808a2f",
+  草绿: "#82c91e",
+  薄荷绿: "#96f2d7",
+  翡翠绿: "#0ca678",
+  森林绿: "#2b5c34",
+  墨绿: "#2b5c34",
+  青绿: "#0ca678",
+  松石绿: "#22b8cf",
+  抹茶绿: "#93c572",
+  绿: "#2f9e44",
+  天青: "#15aabf",
+  青: "#0c8599",
+  天蓝: "#74c0fc",
+  深蓝: "#1b2a5c",
+  藏青: "#1b2a5c",
+  藏蓝: "#1b2a5c",
+  宝蓝: "#2451b7",
+  蒂芙尼蓝: "#0abab5",
+  靛蓝: "#4c6ef5",
+  灰蓝: "#5c6b7a",
+  蓝灰: "#5c6b7a",
+  蓝: "#1c7ed6",
+  紫罗兰: "#7950f2",
+  薰衣草: "#b197fc",
+  丁香紫: "#c8a2c8",
+  梅红: "#8e4585",
+  洋红: "#d6336c",
+  紫: "#7048e8",
+  炭黑: "#343a40",
+  灰: "#868e96",
+  黑: "#141414",
+  象牙白: "#fffff0",
+  白: "#fafaf9",
+  银: "#c0c0c0",
+  香槟金: "#f7e7ce",
+  玫瑰金: "#b76e79",
+  古铜: "#cd7f32",
+  铜: "#b87333",
+  金: "#e8b000",
+};
+
+const ZH_COLOR_KEYS = Object.keys(ZH_NAMED_COLORS).sort((a, b) => b.length - a.length);
+
+/** Longest Chinese colour name ending furthest right ("天蓝色" → 天蓝). */
+function zhColor(text: string): { name: string; hex: string } | null {
+  let best: { name: string; hex: string; end: number } | null = null;
+  for (const key of ZH_COLOR_KEYS) {
+    const idx = text.lastIndexOf(key);
+    if (idx < 0) continue;
+    const end = idx + key.length;
+    if (!best || end > best.end || (end === best.end && key.length > best.name.length)) {
+      best = { name: key, hex: ZH_NAMED_COLORS[key], end };
+    }
+  }
+  return best ? { name: best.name, hex: best.hex } : null;
+}
+
 const escape = (k: string) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/[ -]/g, "[\\s-]?");
 const phraseRe = (table: Record<string, string>) =>
   new RegExp(`\\b(${Object.keys(table).sort((a, b) => b.length - a.length).map(escape).join("|")})\\b`, "gi");
@@ -192,10 +287,14 @@ const MOOD_BASE: Record<ColorMood, string> = {
 function modifiers(text: string, hex: string) {
   const o = hexToOklch(hex);
   if (!o) return hex;
-  if (/\b(light|pale|soft|pastel|baby)\b/i.test(text)) return oklchToHex({ l: Math.max(o.l, 0.86), c: o.c * 0.55, h: o.h });
-  if (/\b(dark|deep|midnight)\b/i.test(text)) return oklchToHex({ l: Math.min(o.l, 0.38), c: o.c * 0.85, h: o.h });
-  if (/\b(bright|neon|vivid|electric)\b/i.test(text)) return oklchToHex({ l: o.l, c: o.c * 1.25, h: o.h });
-  if (/\b(muted|dusty|faded)\b/i.test(text)) return oklchToHex({ l: o.l, c: o.c * 0.5, h: o.h });
+  if (/\b(light|pale|soft|pastel|baby)\b/i.test(text) || /浅|淡|柔和|淡雅|浅色|淡色|粉彩/.test(text))
+    return oklchToHex({ l: Math.max(o.l, 0.86), c: o.c * 0.55, h: o.h });
+  if (/\b(dark|deep|midnight)\b/i.test(text) || /深|暗|浓|墨色|深色|暗色/.test(text))
+    return oklchToHex({ l: Math.min(o.l, 0.38), c: o.c * 0.85, h: o.h });
+  if (/\b(bright|neon|vivid|electric)\b/i.test(text) || /亮|荧光|鲜艳|鲜亮|明艳|明亮/.test(text))
+    return oklchToHex({ l: o.l, c: o.c * 1.25, h: o.h });
+  if (/\b(muted|dusty|faded)\b/i.test(text) || /灰|做旧|低饱和|莫兰迪/.test(text))
+    return oklchToHex({ l: o.l, c: o.c * 0.5, h: o.h });
   return hex;
 }
 
@@ -224,6 +323,9 @@ export function parseColor(text: string, mood?: ColorMood | null): ColorData {
   }
   const evocative = lastPhrase(text, EVOCATIVE_RE, EVOCATIVE_COLORS);
   if (evocative) return { hex: modifiers(text, EVOCATIVE_COLORS[evocative]), name: evocative, source: "named" };
+  // Chinese names are matched boundary-free, so they run after the ASCII rules.
+  const zh = text.match(CJK_RE) ? zhColor(text) : null;
+  if (zh) return { hex: modifiers(text, zh.hex), name: zh.name, source: "named" };
   if (mood) return { hex: modifiers(text, MOOD_BASE[mood]), name: null, source: "mood" };
   return { hex: null, name: null, source: null };
 }

@@ -1,4 +1,5 @@
-import { collapse, findDate, removeRange, titleCase } from "./common";
+import { collapse, findDate, hasCJK, removeRange, titleCase } from "./common";
+import { fw, tightenZh } from "./zh";
 
 export type TravelData = { destination: string | null; origin: string | null; start: Date | null; end: Date | null };
 
@@ -22,8 +23,17 @@ function weekend(ref: Date, next: boolean): [Date, Date] {
 const STOP_WORDS =
   /\s+(?:to|next|this|on|for|from|in|by|via|tomorrow|today|tonight|with|and|trip|flight|train|bus|weekend|week|month|work|business|vacation|holiday|leave|leaving|return(?:ing)?|jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|(?:mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun)(?:day)?|\d)\b.*$/i;
 
+/**
+ * Chinese place capture: `去三亚`, `从北京到上海`. The trailing words that are
+ * part of the sentence rather than the name are peeled with a lookahead.
+ */
+const ZH_DEST = /(?:去往|前往|飞到|飞往|抵达|去|到)\s*([\u4e00-\u9fff]{1,12}?)(?=\s*(?:旅游|旅行|玩|度假|出差|行程|的|，|。|！|？|,|\.|!|\?|$))/;
+const ZH_ORIGIN = /(?:从|由)\s*([\u4e00-\u9fff]{1,12}?)(?=\s*(?:到|去|飞|前往|出发|启程|，|。|,|\.|$))/;
+
 export function parseTravel(text: string, ref: Date = new Date()): TravelData {
-  let rest = ` ${collapse(text)} `;
+  const src = fw(text);
+  const zh = hasCJK(src);
+  let rest = ` ${collapse(src)} `;
   let start: Date | null = null;
   let end: Date | null = null;
 
@@ -47,9 +57,16 @@ export function parseTravel(text: string, ref: Date = new Date()): TravelData {
     const place = ` ${m[1]}`.replace(STOP_WORDS, "").trim();
     return place ? titleCase(place) : null;
   };
+  const grabZh = (re: RegExp) => {
+    if (!zh) return null;
+    const m = rest.match(re);
+    if (!m) return null;
+    const place = tightenZh(m[1].trim());
+    return place || null;
+  };
 
-  const destination = grab(/\b(?:to|for|visit(?:ing)?|in)\s+([a-z][a-z .'-]{1,40})/i);
-  const origin = grab(/\bfrom\s+([a-z][a-z .'-]{1,40})/i);
+  const destination = grab(/\b(?:to|for|visit(?:ing)?|in)\s+([a-z][a-z .'-]{1,40})/i) ?? grabZh(ZH_DEST);
+  const origin = grab(/\bfrom\s+([a-z][a-z .'-]{1,40})/i) ?? grabZh(ZH_ORIGIN);
   return { destination, origin, start, end };
 }
 

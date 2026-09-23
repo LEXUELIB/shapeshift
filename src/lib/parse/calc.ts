@@ -1,3 +1,5 @@
+import { fw } from "./zh";
+
 export type CalcData = { expression: string; result: number | null };
 
 type Token = { t: "num"; v: number } | { t: "op"; v: string } | { t: "lp" } | { t: "rp" };
@@ -7,8 +9,11 @@ const RIGHT = new Set(["^", "u-"]);
 
 /** Normalize natural phrasing into an arithmetic expression. */
 export function normalizeExpression(text: string): string {
-  let s = text.toLowerCase().trim();
-  s = s.replace(/^(?:what(?:'s| is)|calc(?:ulate)?|compute|how much is)\s+/, "").replace(/[=?]+\s*$/, "");
+  let s = fw(text).toLowerCase().trim();
+  s = s
+    .replace(/^(?:what(?:'s| is)|calc(?:ulate)?|compute|how much is|请问|帮我算一下?|计算一下?|算一下|算算)\s*/, "")
+    .replace(/(?:等于|是)?\s*(?:多少|几)\s*$/, "")
+    .replace(/[=?]+\s*$/, "");
   s = s.replace(/(\d),(\d{3})/g, "$1$2");
   s = s.replace(/(\d+(?:\.\d+)?)\s*%\s*off\s+(\d+(?:\.\d+)?)/g, "$2*(1-$1/100)");
   s = s.replace(/(\d+(?:\.\d+)?)\s*%\s*of\s+/g, "($1/100)*");
@@ -16,6 +21,14 @@ export function normalizeExpression(text: string): string {
   s = s.replace(/\bplus\b/g, "+").replace(/\bminus\b/g, "-").replace(/\b(?:times|multiplied by)\b/g, "*");
   s = s.replace(/\b(?:divided by|over)\b/g, "/").replace(/\bsquared\b/g, "^2").replace(/\bcubed\b/g, "^3");
   s = s.replace(/[×x]/g, "*").replace(/÷/g, "/").replace(/\*\*/g, "^");
+  // ── Chinese ────────────────────────────────────────────────
+  // 百分之18 / 18的… / 加 减 乘 除. `的` is the possessive that means "of".
+  s = s.replace(/百分之\s*(\d+(?:\.\d+)?)/g, "($1/100)");
+  s = s.replace(/乘以/g, "*").replace(/乘/g, "*");
+  s = s.replace(/除以/g, "/").replace(/除/g, "/");
+  s = s.replace(/加上/g, "+").replace(/加/g, "+");
+  s = s.replace(/减去/g, "-").replace(/减/g, "-");
+  s = s.replace(/的/g, "*");
   return s;
 }
 
