@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion, useSpring, useTransform } fr
 import { Plus, type LucideIcon } from "lucide-react";
 import { createContext, useContext, useEffect, type ReactNode } from "react";
 import { spring, tween } from "@/lib/motion";
+import { isZh, t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /** Lets a card write back into the main input — the text stays the source of truth. */
@@ -134,12 +135,19 @@ export function formatWhen(date: Date, hasTime: boolean, now = new Date()) {
   const days = Math.round((startOf(date) - startOf(now)) / 86_400_000);
   const day =
     days === 0
-      ? "Today"
+      ? t("Today")
       : days === 1
-        ? "Tomorrow"
+        ? t("Tomorrow")
         : days > 1 && days < 7
-          ? date.toLocaleDateString("en-US", { weekday: "long" })
-          : date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-  const time = hasTime ? date.toLocaleTimeString("en-US", { hour: "numeric", minute: date.getMinutes() ? "2-digit" : undefined }) : null;
+          ? date.toLocaleDateString(isZh ? "zh-CN" : "en-US", { weekday: isZh ? "short" : "long" })
+          : date.toLocaleDateString(isZh ? "zh-CN" : "en-US", { weekday: "short", month: "short", day: "numeric" });
+  // 24-hour on Chinese: "15:00", not "3 PM".
+  const time = hasTime
+    ? date.toLocaleTimeString(isZh ? "zh-CN" : "en-US", {
+        hour: isZh ? "2-digit" : "numeric",
+        minute: isZh || date.getMinutes() ? "2-digit" : undefined,
+        hour12: !isZh,
+      })
+    : null;
   return { day, time };
 }

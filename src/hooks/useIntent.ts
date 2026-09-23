@@ -5,6 +5,7 @@ import { notify } from "@/lib/notify";
 import { mockClassify, mockClassifyAsync } from "@/lib/jev/mock";
 import { type IntentResult, intentResultSchema, noneResult } from "@/lib/jev/types";
 import { LRU, normalizeKey } from "@/lib/lru";
+import { t } from "@/lib/i18n";
 
 export type IntentStatus = "idle" | "thinking" | "ready";
 
@@ -24,7 +25,7 @@ let toasted = false;
 function fallback(text: string): IntentResult {
   if (!toasted) {
     toasted = true;
-    notify("Jev is busy. Using offline mode for now.", { id: "offline" });
+    notify(t("Jev is busy. Using offline mode for now."), { id: "offline" });
   }
   return mockClassify(text);
 }

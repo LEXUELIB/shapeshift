@@ -1,6 +1,7 @@
 "use client";
 
 import type { NoteData } from "@/lib/parse/note";
+import { t } from "@/lib/i18n";
 import { Field } from "./shared";
 import type { CardProps } from "./types";
 
@@ -10,7 +11,7 @@ export function NoteCard({ data, signals }: CardProps<NoteData>) {
       <Field index={0} className="flex items-start gap-2">
         <h2 className="text-[17px] leading-6 font-[550] text-pretty break-words">{data.title}</h2>
         {signals.isQuestion && !data.title.endsWith("?") && (
-          <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-secondary text-[12px] font-semibold text-ink-2" role="img" aria-label="Question">
+          <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-secondary text-[12px] font-semibold text-ink-2" role="img" aria-label={t("Question")}>
             ?
           </span>
         )}

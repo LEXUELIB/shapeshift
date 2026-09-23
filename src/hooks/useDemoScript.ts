@@ -1,22 +1,28 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { tx } from "@/lib/i18n";
 
 type Step = { text: string; then?: string };
 
+/**
+ * `?demo=1` types these at human speed. Chinese runs the accepted sample set
+ * (see reports/zh-cn-golden-set.md) so the recording shows inputs the parsers
+ * understand; English keeps the original script byte for byte.
+ */
 export const DEMO_SCRIPT: Step[] = [
-  { text: "dinner with priya friday 8pm", then: " on zoom" },
-  { text: "buy milk, eggs, bread and coffee" },
-  { text: "25 min focus" },
-  { text: "#ff6b35" },
-  { text: "split 2400 between 3" },
-  { text: "5 miles in km" },
-  { text: "flight to goa next weekend" },
-  { text: "pizza or burgers for friday?" },
-  { text: "days until christmas" },
-  { text: "3pm pst in ist" },
-  { text: "roll 2d6" },
-  { text: "remind me to pay rent tomorrow urgent" },
+  { text: tx("dinner with priya friday 8pm", "明天下午三点和普里亚视频会议"), then: tx(" on zoom", " 用 Zoom") },
+  { text: tx("buy milk, eggs, bread and coffee", "买牛奶、鸡蛋、面包和咖啡") },
+  { text: tx("25 min focus", "25分钟专注") },
+  { text: tx("#ff6b35", "天蓝色") },
+  { text: tx("split 2400 between 3", "2400块分3个人") },
+  { text: tx("5 miles in km", "5英里等于多少公里") },
+  { text: tx("flight to goa next weekend", "下周末去三亚") },
+  { text: tx("pizza or burgers for friday?", "周五吃披萨还是汉堡？") },
+  { text: tx("days until christmas", "12月25日还有多少天") },
+  { text: tx("3pm pst in ist", "北京下午3点换成纽约时间") },
+  { text: tx("roll 2d6", "掷2个骰子") },
+  { text: tx("remind me to pay rent tomorrow urgent", "提醒我明天交房租") },
 ];
 
 export type DemoApi = {
@@ -52,6 +58,8 @@ export function useDemoScript(enabled: boolean, loop: boolean, api: DemoApi) {
 
     const type = async (s: string) => {
       let current = apiRef.current.getText();
+      // A CJK character is one code point but two UTF-16 units; iterating the
+      // string still types it in one step, so the pauses below stay per-glyph.
       for (const ch of s) {
         current += ch;
         apiRef.current.setText(current);

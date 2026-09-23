@@ -3,10 +3,14 @@
 import { useState } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { HabitData } from "@/lib/parse/habit";
+import { isZh, t } from "@/lib/i18n";
+import { connector } from "./display";
 import { Chip, Field, Missing, Placeholder } from "./shared";
 import { Repeat } from "lucide-react";
 import type { CardProps } from "./types";
 
+// `l` is the visible letter, `n` the accessible full name. Chinese weekdays are
+// 一…日 rather than M/T/W/T/F/S/S, which would be ambiguous in any language.
 const WEEK = [
   { i: 1, l: "M", n: "Monday" },
   { i: 2, l: "T", n: "Tuesday" },
@@ -15,7 +19,10 @@ const WEEK = [
   { i: 5, l: "F", n: "Friday" },
   { i: 6, l: "S", n: "Saturday" },
   { i: 0, l: "S", n: "Sunday" },
-];
+] as const;
+
+/** 周一…周日 short forms, used in place of the Latin initials. */
+const WEEK_ZH: Record<number, string> = { 1: "一", 2: "二", 3: "三", 4: "四", 5: "五", 6: "六", 0: "日" };
 
 export function HabitCard({ data, interactive }: CardProps<HabitData>) {
   const [days, setDays] = useState<string[] | null>(null);
@@ -30,8 +37,8 @@ export function HabitCard({ data, interactive }: CardProps<HabitData>) {
   return (
     <div className="flex flex-col gap-3">
       <Field index={0} className="flex flex-wrap items-center justify-between gap-3">
-        {data.title ? <h2 className="text-[17px] leading-6 font-[550] text-balance">{data.title}</h2> : <Missing>Untitled habit</Missing>}
-        {data.label ? <Chip icon={Repeat}>{data.label}</Chip> : <Placeholder insert=" every day">Add how often</Placeholder>}
+        {data.title ? <h2 className="text-[17px] leading-6 font-[550] text-balance">{data.title}</h2> : <Missing>{t("Untitled habit")}</Missing>}
+        {data.label ? <Chip icon={Repeat}>{data.label}</Chip> : <Placeholder insert={connector("everyDay")}>{t("Add how often")}</Placeholder>}
       </Field>
       <Field index={1}>
         <ToggleGroup
@@ -40,16 +47,16 @@ export function HabitCard({ data, interactive }: CardProps<HabitData>) {
           onValueChange={setDays}
           disabled={!interactive}
           className="flex-wrap gap-1.5"
-          aria-label="Days of the week"
+          aria-label={t("Days of the week")}
         >
           {WEEK.map((d) => (
             <ToggleGroupItem
               key={d.i}
               value={String(d.i)}
-              aria-label={d.n}
+              aria-label={t(d.n)}
               className="size-9 rounded-full! border border-border text-[13px] font-medium text-muted-foreground data-[state=on]:border-foreground data-[state=on]:bg-foreground data-[state=on]:text-background"
             >
-              {d.l}
+              {isZh ? WEEK_ZH[d.i] : d.l}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>

@@ -3,6 +3,7 @@
 import { Mail, Phone } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { ContactData } from "@/lib/parse/contact";
+import { t } from "@/lib/i18n";
 import { Field, Missing } from "./shared";
 import type { CardProps } from "./types";
 
@@ -16,11 +17,11 @@ export function ContactCard({ data }: CardProps<ContactData>) {
       </Field>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <Field index={1}>
-          {data.name ? <h2 className="text-[17px] leading-6 font-[550] break-words">{data.name}</h2> : <Missing>No name yet</Missing>}
+          {data.name ? <h2 className="text-[17px] leading-6 font-[550] break-words">{data.name}</h2> : <Missing>{t("No name yet")}</Missing>}
         </Field>
         <Field index={2} className="flex flex-col divide-y divide-border/70">
-          <Row icon={Phone} value={data.phone} placeholder="No phone yet" />
-          <Row icon={Mail} value={data.email} placeholder="No email yet" mono />
+          <Row icon={Phone} value={data.phone} placeholder={t("No phone yet")} />
+          <Row icon={Mail} value={data.email} placeholder={t("No email yet")} mono />
         </Field>
       </div>
     </div>

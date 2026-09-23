@@ -3,6 +3,7 @@
 import { CARD_INTENTS, registry } from "@/components/intents/registry";
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import type { CardIntent } from "@/lib/jev/types";
+import { t } from "@/lib/i18n";
 
 /**
  * "/" opens every UI type — a manual override and a gallery in one.
@@ -21,15 +22,15 @@ export function IntentPalette({
     <CommandDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Choose a card"
-      description="Force the input into a specific card type"
+      title={t("Choose a card")}
+      description={t("Force the input into a specific card type")}
       className="shadow-[var(--shadow-float)] data-closed:animate-none data-open:animate-none sm:max-w-[480px]"
     >
       {/* shadcn's CommandDialog no longer includes the cmdk root; without it cmdk has no store. */}
       <Command>
-        <CommandInput placeholder="Show as…" className="text-base sm:text-sm" />
+        <CommandInput placeholder={t("Show as…")} className="text-base sm:text-sm" />
         <CommandList className="max-h-[420px] overscroll-contain">
-          <CommandEmpty>No card type matches. Try “timer” or “poll”.</CommandEmpty>
+          <CommandEmpty>{t("No card type matches. Try “timer” or “poll”.")}</CommandEmpty>
           <CommandGroup>
             {CARD_INTENTS.map((intent) => {
               const def = registry[intent];

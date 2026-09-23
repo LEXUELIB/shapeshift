@@ -5,13 +5,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type ConvertData, convertValue, UNIT_LABELS, unitOptions } from "@/lib/parse/convert";
+import { isZh, t } from "@/lib/i18n";
+import { formatNumber } from "./display";
 import { AnimatedNumber, Field, HeroNumber, Meta, Missing } from "./shared";
 import type { CardProps } from "./types";
 
 const fmt = (n: number) => {
   const abs = Math.abs(n);
   const digits = abs >= 1000 ? 0 : abs >= 100 ? 1 : abs >= 1 ? 2 : 4;
-  return n.toLocaleString("en-US", { maximumFractionDigits: digits });
+  return formatNumber(n, { maximumFractionDigits: digits });
 };
 
 export function ConvertCard({ data, interactive }: CardProps<ConvertData>) {
@@ -26,7 +28,7 @@ export function ConvertCard({ data, interactive }: CardProps<ConvertData>) {
   if (data.value === null || !data.from) {
     return (
       <Field index={0} className="flex items-center gap-2">
-        <Missing>Type a value with a unit, like 5 miles in km</Missing>
+        <Missing>{t("Type a value with a unit, like 5 miles in km")}</Missing>
       </Field>
     );
   }
@@ -55,19 +57,19 @@ export function ConvertCard({ data, interactive }: CardProps<ConvertData>) {
     <div className="flex flex-wrap items-center justify-between gap-3">
       <Field index={0} className="flex flex-col gap-2">
         <HeroNumber className="text-ink-2">{fmt(data.value)}</HeroNumber>
-        {unitSelect(from, (v) => setUnits({ from: v, to }), "From unit")}
+        {unitSelect(from, (v) => setUnits({ from: v, to }), t("From unit"))}
       </Field>
       <Field index={1}>
-        <Button size="icon-sm" variant="ghost" aria-label="Swap units" disabled={!interactive} onClick={() => setUnits({ from: to, to: from })}>
+        <Button size="icon-sm" variant="ghost" aria-label={t("Swap units")} disabled={!interactive} onClick={() => setUnits({ from: to, to: from })}>
           <ArrowLeftRight />
         </Button>
       </Field>
       <Field index={2} className="flex min-w-0 flex-col items-end gap-2">
         <HeroNumber>{result === null ? "—" : <AnimatedNumber value={result} format={fmt} />}</HeroNumber>
-        {unitSelect(to, (v) => setUnits({ from, to: v }), "To unit")}
+        {unitSelect(to, (v) => setUnits({ from, to: v }), t("To unit"))}
       </Field>
       <Meta className="sr-only">
-        {data.value} {from} is {result} {to}
+        {isZh ? `${data.value} ${from} 等于 ${result} ${to}` : `${data.value} ${from} is ${result} ${to}`}
       </Meta>
     </div>
   );

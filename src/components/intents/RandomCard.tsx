@@ -4,6 +4,7 @@ import { Shuffle } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { t } from "@/lib/i18n";
 import { spring, tween } from "@/lib/motion";
 import { describeRandom, type RandomData, rollRandom } from "@/lib/parse/random";
 import { Field, Meta } from "./shared";
@@ -47,7 +48,7 @@ export function RandomCard({ data, interactive }: CardProps<RandomData>) {
       <Field index={1}>
         <Button size="sm" onClick={roll} disabled={!interactive} className="gap-1.5 px-3.5">
           <Shuffle />
-          {data.kind === "coin" ? "Flip again" : data.kind === "pick" ? "Pick again" : "Roll again"}
+          {t(data.kind === "coin" ? "Flip again" : data.kind === "pick" ? "Pick again" : "Roll again")}
         </Button>
       </Field>
     </div>

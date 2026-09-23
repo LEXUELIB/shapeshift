@@ -2,35 +2,40 @@
 
 import { CalendarDays } from "lucide-react";
 import type { CountdownData } from "@/lib/parse/countdown";
+import { isZh, t } from "@/lib/i18n";
+import { formatDate, formatNumber } from "./display";
 import { AnimatedNumber, Chip, Field, HeroNumber, Meta, Missing } from "./shared";
 import type { CardProps } from "./types";
 
-const long = (d: Date) => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+const long = (d: Date) => formatDate(d, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 
 export function CountdownCard({ data }: CardProps<CountdownData>) {
   if (data.days === null || !data.date) {
     return (
       <Field index={0}>
-        <Missing>Type a date or a holiday, like “days until christmas”</Missing>
+        <Missing>{t("Type a date or a holiday, like “days until christmas”")}</Missing>
       </Field>
     );
   }
   const past = data.days < 0;
   const n = Math.abs(data.days);
   const weeks = Math.floor(n / 7);
+  const title = data.title || t("then");
 
   return (
     <div className="flex flex-col gap-3">
       <Field index={0} className="flex flex-wrap items-end gap-x-3 gap-y-1">
         {data.days === 0 ? (
-          <HeroNumber className="text-[44px] leading-[48px]">Today</HeroNumber>
+          <HeroNumber className="text-[44px] leading-[48px]">{t("Today")}</HeroNumber>
         ) : (
           <>
+            {/* Chinese puts the verb before the number: 距离圣诞节还有 12 天. */}
+            {isZh && <span className="pb-1.5 text-[17px] leading-6 font-[550] text-ink-2">{past ? `${title}已经过去` : `距离${title}还有`}</span>}
             <HeroNumber className="text-[44px] leading-[48px]">
-              <AnimatedNumber value={n} format={(v) => Math.round(v).toLocaleString("en-US")} />
+              <AnimatedNumber value={n} format={(v) => formatNumber(Math.round(v))} />
             </HeroNumber>
             <span className="pb-1.5 text-[17px] leading-6 font-[550] text-ink-2">
-              {n === 1 ? "day" : "days"} {past ? "since" : "until"} {data.title || "then"}
+              {isZh ? t("days") : `${t("days")} ${t(past ? "since" : "until")} ${title}`}
             </span>
           </>
         )}
@@ -39,7 +44,8 @@ export function CountdownCard({ data }: CardProps<CountdownData>) {
         <Chip icon={CalendarDays}>{long(data.date)}</Chip>
         {weeks >= 2 && (
           <Meta>
-            {weeks} weeks{n % 7 ? `, ${n % 7} ${n % 7 === 1 ? "day" : "days"}` : ""}
+            {weeks} {t("weeks")}
+            {n % 7 ? `, ${n % 7} ${t("days")}` : ""}
           </Meta>
         )}
       </Field>

@@ -5,6 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EXPENSE_CATEGORIES, type ExpenseCategory } from "@/lib/jev/types";
 import { formatAmount } from "@/lib/parse/common";
 import type { ExpenseData } from "@/lib/parse/expense";
+import { t, tx } from "@/lib/i18n";
+import { connector } from "./display";
 import { CATEGORY_ICON, CATEGORY_LABEL } from "./icons";
 import { AnimatedNumber, Field, HeroNumber, IconSwap, Missing, Placeholder } from "./shared";
 import type { CardProps } from "./types";
@@ -20,15 +22,15 @@ export function ExpenseRow({ data, signals, interactive }: CardProps<ExpenseData
           <IconSwap icon={CATEGORY_ICON[category]} iconClassName="size-5" />
         </span>
         <div className="flex min-w-0 flex-col gap-1">
-          {data.item ? <h2 className="text-[17px] leading-6 font-[550] text-pretty break-words">{data.item}</h2> : <Placeholder insert=" on ">Add what it was for</Placeholder>}
+          {data.item ? <h2 className="text-[17px] leading-6 font-[550] text-pretty break-words">{data.item}</h2> : <Placeholder insert={connector("on")}>{t("Add what it was for")}</Placeholder>}
           <Select value={category} onValueChange={(v) => setPicked(v as ExpenseCategory)} disabled={!interactive}>
-            <SelectTrigger size="sm" className="h-7 w-fit gap-1 rounded-full border-none bg-secondary px-2.5 text-[13px] font-medium text-ink-2 shadow-none" aria-label="Category">
+            <SelectTrigger size="sm" className="h-7 w-fit gap-1 rounded-full border-none bg-secondary px-2.5 text-[13px] font-medium text-ink-2 shadow-none" aria-label={t("Category")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {EXPENSE_CATEGORIES.map((c) => (
                 <SelectItem key={c} value={c}>
-                  {CATEGORY_LABEL[c]}
+                  {c === "shopping" ? tx("Shopping", "购物") : t(CATEGORY_LABEL[c])}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -41,7 +43,7 @@ export function ExpenseRow({ data, signals, interactive }: CardProps<ExpenseData
             <AnimatedNumber value={data.amount} format={(v) => formatAmount(v, data.currency)} />
           </HeroNumber>
         ) : (
-          <Missing>No amount yet</Missing>
+          <Missing>{t("No amount yet")}</Missing>
         )}
       </Field>
     </div>

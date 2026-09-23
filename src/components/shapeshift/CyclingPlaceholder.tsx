@@ -1,22 +1,28 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { tween } from "@/lib/motion";
+import { tx } from "@/lib/i18n";
 
+/**
+ * The 12 placeholder examples, in the same order as the card gallery. Chinese
+ * inputs come from the accepted sample set so every rotating line is one the
+ * parsers actually understand.
+ */
 const EXAMPLES = [
-  "dinner with priya friday 8pm",
-  "buy milk, eggs, bread and coffee",
-  "25 min focus",
-  "a warm sunset orange",
-  "split 2400 between 3",
-  "5 miles in km",
-  "flight to goa next weekend",
-  "pizza or burgers for friday?",
-  "days until christmas",
-  "3pm pst in ist",
-  "roll 2d6",
-  "minecraft diamond",
+  tx("dinner with priya friday 8pm", "明天下午三点和普里亚视频会议"),
+  tx("buy milk, eggs, bread and coffee", "买牛奶、鸡蛋、面包和咖啡"),
+  tx("25 min focus", "25分钟专注"),
+  tx("a warm sunset orange", "暖阳橙色"),
+  tx("split 2400 between 3", "2400块分3个人"),
+  tx("5 miles in km", "5英里等于多少公里"),
+  tx("flight to goa next weekend", "下周末去三亚"),
+  tx("pizza or burgers for friday?", "周五吃披萨还是汉堡？"),
+  tx("days until christmas", "12月25日还有多少天"),
+  tx("3pm pst in ist", "北京下午3点换成纽约时间"),
+  tx("roll 2d6", "掷2个骰子"),
+  tx("minecraft diamond", "天蓝色"),
 ];
 
 export function CyclingPlaceholder() {

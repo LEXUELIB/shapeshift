@@ -3,14 +3,20 @@
 import { ArrowRight, CalendarRange } from "lucide-react";
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
+import { zhCN } from "react-day-picker/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { TravelData } from "@/lib/parse/travel";
+import { isZh, t } from "@/lib/i18n";
+import { connector, formatDate } from "./display";
 import { TRANSPORT_ICON } from "./icons";
 import { Chip, Field, IconSwap, Meta, Placeholder } from "./shared";
 import type { CardProps } from "./types";
 
-const short = (d: Date) => d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+/** Chinese month/weekday headers; undefined keeps react-day-picker's en-US default. */
+const CALENDAR_LOCALE = isZh ? zhCN : undefined;
+
+const short = (d: Date) => formatDate(d, { weekday: "short", month: "short", day: "numeric" });
 
 export function TravelCard({ data, signals, interactive }: CardProps<TravelData>) {
   const [range, setRange] = useState<DateRange | undefined>(undefined);
@@ -36,27 +42,27 @@ export function TravelCard({ data, signals, interactive }: CardProps<TravelData>
               {data.destination}
             </h2>
           ) : (
-            <Placeholder insert=" to ">Add destination</Placeholder>
+            <Placeholder insert={connector("to")}>{t("Add destination")}</Placeholder>
           )}
-          {signals.transport && <Meta className="capitalize">{signals.transport === "car" ? "Road trip" : signals.transport}</Meta>}
+          {signals.transport && <Meta className="capitalize">{signals.transport === "car" ? t("Road trip") : signals.transport}</Meta>}
         </div>
       </Field>
       <Field index={1}>
         <Popover>
           <PopoverTrigger asChild disabled={!interactive}>
-            <button type="button" aria-label={from ? "Change dates" : "Add dates"} className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+            <button type="button" aria-label={from ? t("Change dates") : t("Add dates")} className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
               {from ? (
                 <Chip icon={CalendarRange}>
                   {short(from)}
                   {to && to.getTime() !== from.getTime() ? ` – ${short(to)}` : ""}
                 </Chip>
               ) : (
-                <Placeholder>Add dates</Placeholder>
+                <Placeholder>{t("Add dates")}</Placeholder>
               )}
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Calendar mode="range" selected={{ from, to }} onSelect={setRange} numberOfMonths={1} />
+            <Calendar locale={CALENDAR_LOCALE} mode="range" selected={{ from, to }} onSelect={setRange} numberOfMonths={1} />
           </PopoverContent>
         </Popover>
       </Field>

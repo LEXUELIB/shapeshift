@@ -1,6 +1,7 @@
 "use client";
 
 import type { LinkData } from "@/lib/parse/link";
+import { t } from "@/lib/i18n";
 import { Field, Meta, Missing } from "./shared";
 import type { CardProps } from "./types";
 
@@ -14,7 +15,7 @@ export function LinkCard({ data }: CardProps<LinkData>) {
       </Field>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <Field index={1}>
-          {data.domain ? <h2 className="text-[17px] leading-6 font-[550] break-all">{data.domain}</h2> : <Missing>Paste a link</Missing>}
+          {data.domain ? <h2 className="text-[17px] leading-6 font-[550] break-all">{data.domain}</h2> : <Missing>{t("Paste a link")}</Missing>}
         </Field>
         {data.url && (
           <Field index={2}>
@@ -22,7 +23,7 @@ export function LinkCard({ data }: CardProps<LinkData>) {
           </Field>
         )}
         <Field index={3} className="pt-1 text-[15px] leading-[22px] text-ink-2">
-          {data.note || <span className="text-muted-foreground">No note</span>}
+          {data.note || <span className="text-muted-foreground">{t("No note")}</span>}
         </Field>
       </div>
     </div>

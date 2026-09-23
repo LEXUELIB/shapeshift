@@ -9,10 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import type { CardIntent } from "@/lib/jev/types";
+import { t } from "@/lib/i18n";
 import { spring, tween } from "@/lib/motion";
 import type { ParsedMap } from "@/lib/parse";
 import type { GatedSignals } from "@/lib/signals";
 import { cn } from "@/lib/utils";
+import { lower } from "@/components/intents/display";
 
 type Props<K extends CardIntent> = {
   intent: K;
@@ -81,16 +83,16 @@ export function CardView<K extends CardIntent>({ intent, data, signals, readines
       <motion.div layout="position" className="flex min-h-8 flex-wrap items-center justify-between gap-2">
         {ghost ? (
           <span className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground">
-            <Kbd>Tab</Kbd> to keep as {def.label.toLowerCase()}
+            <Kbd>Tab</Kbd> {t("to keep as")} {lower(def.label)}
           </span>
         ) : (
           <>
             <span className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground">
-              <Kbd>Esc</Kbd> {editing ? "to cancel" : "to clear"}
+              <Kbd>Esc</Kbd> {editing ? t("to cancel") : t("to clear")}
             </span>
             <motion.div style={{ opacity: btnOpacity, y: btnY }}>
               <Button size="sm" onClick={onConfirm} className="gap-1.5 rounded-full pr-2 pl-3">
-                {editing ? "Save" : "Add"} {def.label.toLowerCase()}
+                {editing ? t("Save") : t("Add")} {lower(def.label)}
                 <CornerDownLeft className="size-3.5 opacity-60" aria-hidden />
               </Button>
             </motion.div>

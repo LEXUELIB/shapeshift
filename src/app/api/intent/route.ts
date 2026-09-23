@@ -2,6 +2,7 @@ import { APIUserAbortError, classifierMode, classifyWithJev, warnMockOnce } from
 import { mockClassify } from "@/lib/jev/mock";
 import { type IntentResult, intentRequestSchema, noneResult } from "@/lib/jev/types";
 import { LRU, normalizeKey } from "@/lib/lru";
+import { t } from "@/lib/i18n";
 
 export const runtime = "nodejs";
 
@@ -9,7 +10,7 @@ const cache = new LRU<string, IntentResult>(500);
 
 export async function POST(request: Request) {
   const body = intentRequestSchema.safeParse(await request.json().catch(() => null));
-  if (!body.success) return Response.json({ error: "Expected { text: string }" }, { status: 400 });
+  if (!body.success) return Response.json({ error: t("Expected { text: string }") }, { status: 400 });
 
   const text = body.data.text;
   const key = normalizeKey(text);

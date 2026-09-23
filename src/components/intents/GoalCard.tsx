@@ -5,10 +5,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import type { GoalData } from "@/lib/parse/goal";
+import { isZh, t } from "@/lib/i18n";
+import { formatNumber } from "./display";
 import { AnimatedNumber, Field, HeroNumber, Meta, Missing } from "./shared";
 import type { CardProps } from "./types";
 
-const fmt = (n: number) => n.toLocaleString("en-IN", { maximumFractionDigits: 1 });
+const fmt = (n: number) => formatNumber(n, { maximumFractionDigits: 1 });
 
 export function GoalCard({ data, interactive }: CardProps<GoalData>) {
   const [current, setCurrent] = useState<number | null>(null);
@@ -23,7 +25,7 @@ export function GoalCard({ data, interactive }: CardProps<GoalData>) {
     return (
       <Field index={0} className="flex flex-col gap-1">
         {data.title && <h2 className="text-[17px] leading-6 font-[550] text-balance">{data.title}</h2>}
-        <Missing>Add a target, like “read 12 books, 4 done”</Missing>
+        <Missing>{t("Add a target, like “read 12 books, 4 done”")}</Missing>
       </Field>
     );
   }
@@ -37,9 +39,9 @@ export function GoalCard({ data, interactive }: CardProps<GoalData>) {
     <div className="flex flex-col gap-3">
       <Field index={0} className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <h2 className="text-[17px] leading-6 font-[550] text-balance">{data.title || "Goal"}</h2>
+          <h2 className="text-[17px] leading-6 font-[550] text-balance">{data.title || t("Goal")}</h2>
           <Meta className="tabular-nums">
-            {fmt(value)} of {fmt(data.target)}
+            {fmt(value)} {t("of")} {fmt(data.target)}
             {unit}
           </Meta>
         </div>
@@ -48,16 +50,16 @@ export function GoalCard({ data, interactive }: CardProps<GoalData>) {
         </HeroNumber>
       </Field>
       <Field index={1}>
-        <Progress value={pct} className="h-2 bg-secondary" aria-label={`${Math.round(pct)}% of goal`} />
+        <Progress value={pct} className="h-2 bg-secondary" aria-label={isZh ? `目标完成 ${Math.round(pct)}%` : `${Math.round(pct)}% of goal`} />
       </Field>
       <Field index={2} className="flex items-center gap-1">
-        <Button size="icon-sm" variant="ghost" aria-label="Less progress" disabled={!interactive || value <= 0} onClick={() => setCurrent(Math.max(0, value - step))}>
+        <Button size="icon-sm" variant="ghost" aria-label={t("Less progress")} disabled={!interactive || value <= 0} onClick={() => setCurrent(Math.max(0, value - step))}>
           <Minus />
         </Button>
-        <Button size="icon-sm" variant="ghost" aria-label="More progress" disabled={!interactive || value >= data.target} onClick={() => setCurrent(Math.min(data.target ?? 0, value + step))}>
+        <Button size="icon-sm" variant="ghost" aria-label={t("More progress")} disabled={!interactive || value >= data.target} onClick={() => setCurrent(Math.min(data.target ?? 0, value + step))}>
           <Plus />
         </Button>
-        {value >= data.target && <Meta className="ps-1 text-positive">Done</Meta>}
+        {value >= data.target && <Meta className="ps-1 text-positive">{t("Done")}</Meta>}
       </Field>
     </div>
   );

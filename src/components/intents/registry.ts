@@ -26,14 +26,15 @@ import {
   Wallet,
 } from "lucide-react";
 import type { CardIntent } from "@/lib/jev/types";
+import { isZh, t, tx } from "@/lib/i18n";
 import { formatAmount } from "@/lib/parse/common";
 import { UNIT_LABELS } from "@/lib/parse/convert";
 import { formatClock } from "@/lib/parse/timer";
 import { describeRandom } from "@/lib/parse/random";
-import { formatIn } from "@/lib/parse/timezone";
 import type { GatedSignals } from "@/lib/signals";
 import { CalcCard } from "./CalcCard";
 import { CountdownCard } from "./CountdownCard";
+import { formatNumber, formatRemaining, formatZoneTime } from "./display";
 import { GoalCard } from "./GoalCard";
 import { RandomCard } from "./RandomCard";
 import { TimezoneCard } from "./TimezoneCard";
@@ -55,8 +56,11 @@ import { TodoList } from "./TodoList";
 import { TravelCard } from "./TravelCard";
 import type { BadgeSpec, Registry } from "./types";
 
-const repeats = (s: GatedSignals): BadgeSpec[] => (s.recurring ? [{ id: "repeat", label: "Repeats", icon: Repeat }] : []);
-const urgent = (s: GatedSignals): BadgeSpec[] => (s.urgent ? [{ id: "urgent", label: "Urgent", icon: CircleAlert, tone: "caution" }] : []);
+const repeats = (s: GatedSignals): BadgeSpec[] => (s.recurring ? [{ id: "repeat", label: t("Repeats"), icon: Repeat }] : []);
+const urgent = (s: GatedSignals): BadgeSpec[] => (s.urgent ? [{ id: "urgent", label: t("Urgent"), icon: CircleAlert, tone: "caution" }] : []);
+
+/** A list row: `2 items · milk, eggs` / `2 项 · 买牛奶、鸡蛋`. */
+const listCount = (n: number) => (isZh ? `${n} 项` : `${n} item${n === 1 ? "" : "s"}`);
 
 const TONE_LABEL = {
   neutral: "Note",
@@ -80,178 +84,195 @@ const TONE_EDGE = {
  */
 export const registry: Registry = {
   event: {
-    label: "Event",
-    example: "dinner with priya friday 8pm",
+    label: t("Event"),
+    example: tx("dinner with priya friday 8pm", "明天下午三点和普里亚视频会议"),
     icon: CalendarDays,
     signals: ["eventMode", "recurring"],
     badges: repeats,
-    summary: (d) => [d.title || "Event", d.date && Object.values(formatWhen(d.date, d.hasTime)).filter(Boolean).join(", ")].filter(Boolean).join(" · "),
+    summary: (d) => [d.title || t("Event"), d.date && Object.values(formatWhen(d.date, d.hasTime)).filter(Boolean).join(", ")].filter(Boolean).join(" · "),
     Component: EventCard,
   },
   reminder: {
-    label: "Reminder",
-    example: "remind me to call mom tomorrow",
+    label: t("Reminder"),
+    example: tx("remind me to call mom tomorrow", "提醒我明天交房租"),
     icon: Bell,
     signals: ["urgency", "recurring"],
     badges: (s) => [...urgent(s), ...repeats(s)],
     edge: (s) => (s.urgent ? "var(--caution)" : null),
-    summary: (d) => [d.task || "Reminder", d.when && formatWhen(d.when, d.hasTime).day].filter(Boolean).join(" · "),
+    summary: (d) => [d.task || t("Reminder"), d.when && formatWhen(d.when, d.hasTime).day].filter(Boolean).join(" · "),
     Component: ReminderPill,
   },
   todo: {
-    label: "Checklist",
-    example: "buy milk, eggs, bread and coffee",
+    label: t("Checklist"),
+    example: tx("buy milk, eggs, bread and coffee", "买牛奶、鸡蛋、面包和咖啡"),
     icon: ListChecks,
     signals: ["isShoppingList", "urgency"],
     headerIcon: (s) => (s.isShoppingList ? ShoppingCart : ListChecks),
-    headerLabel: (s) => (s.isShoppingList ? "Shopping" : "Checklist"),
+    // "Shopping" is the checklist header (采购); the expense category is tx("Shopping", "购物").
+    headerLabel: (s) => (s.isShoppingList ? t("Shopping") : t("Checklist")),
     badges: urgent,
-    summary: (d) => `${d.items.length} item${d.items.length === 1 ? "" : "s"} · ${d.items.slice(0, 3).join(", ")}`,
+    summary: (d) => `${listCount(d.items.length)} · ${d.items.slice(0, 3).join(tx(", ", "、"))}`,
     Component: TodoList,
   },
   timer: {
-    label: "Timer",
-    example: "25 min focus",
+    label: t("Timer"),
+    example: tx("25 min focus", "25分钟专注"),
     icon: Timer,
     signals: ["timerKind"],
     headerIcon: (s) => (s.timerKind === "focus" ? Focus : s.timerKind === "break" ? Coffee : s.timerKind === "stopwatch" ? AlarmClock : Timer),
-    headerLabel: (s) => (s.timerKind === "focus" ? "Focus" : s.timerKind === "break" ? "Break" : s.timerKind === "stopwatch" ? "Stopwatch" : "Timer"),
-    summary: (d) => [d.label || "Timer", d.seconds && formatClock(d.seconds)].filter(Boolean).join(" · "),
+    headerLabel: (s) => t(s.timerKind === "focus" ? "Focus" : s.timerKind === "break" ? "Break" : s.timerKind === "stopwatch" ? "Stopwatch" : "Timer"),
+    summary: (d) => [d.label || t("Timer"), d.seconds && formatClock(d.seconds)].filter(Boolean).join(" · "),
     Component: TimerRing,
   },
   habit: {
-    label: "Habit",
-    example: "meditate every morning",
+    label: t("Habit"),
+    example: tx("meditate every morning", "每周三次健身"),
     icon: Sun,
     signals: [],
-    summary: (d) => [d.title || "Habit", d.label].filter(Boolean).join(" · "),
+    summary: (d) => [d.title || t("Habit"), d.label].filter(Boolean).join(" · "),
     Component: HabitCard,
   },
   color: {
-    label: "Color",
-    example: "#ff6b35",
+    label: t("Color"),
+    example: tx("#ff6b35", "天蓝色"),
     icon: Palette,
     signals: ["colorMood"],
-    summary: (d) => [d.name ? d.name[0].toUpperCase() + d.name.slice(1) : "Color", d.hex?.toUpperCase()].filter(Boolean).join(" · "),
+    // A color name is a proper noun in the text, so it is not translated; only the fallback is.
+    summary: (d) =>
+      isZh
+        ? [d.name ?? t("Color"), d.hex?.toUpperCase()].filter(Boolean).join(" · ")
+        : [d.name ? d.name[0].toUpperCase() + d.name.slice(1) : "Color", d.hex?.toUpperCase()].filter(Boolean).join(" · "),
     Component: ColorPicker,
   },
   split: {
-    label: "Split",
-    example: "split 2400 between 3",
+    label: t("Split"),
+    example: tx("split 2400 between 3", "2400块分3个人"),
     icon: Users,
     signals: [],
     summary: (d) =>
-      d.total && d.people ? `${formatAmount(d.total, d.currency)} ÷ ${d.people} = ${formatAmount(d.total / d.people, d.currency)} each` : "Split",
+      d.total && d.people
+        ? isZh
+          ? `${formatAmount(d.total, d.currency)} ÷ ${d.people} 人 = 每人 ${formatAmount(d.total / d.people, d.currency)}`
+          : `${formatAmount(d.total, d.currency)} ÷ ${d.people} = ${formatAmount(d.total / d.people, d.currency)} each`
+        : t("Split"),
     Component: SplitCard,
   },
   expense: {
-    label: "Expense",
-    example: "spent 450 on uber",
+    label: t("Expense"),
+    example: tx("spent 450 on uber", "午饭花了45元"),
     icon: Wallet,
     signals: ["expenseCategory"],
     headerIcon: (s) => (s.expenseCategory ? CATEGORY_ICON[s.expenseCategory] : Wallet),
-    summary: (d) => [d.amount !== null && formatAmount(d.amount, d.currency), d.item].filter(Boolean).join(" · ") || "Expense",
+    summary: (d) => [d.amount !== null && formatAmount(d.amount, d.currency), d.item].filter(Boolean).join(" · ") || t("Expense"),
     Component: ExpenseRow,
   },
   convert: {
-    label: "Convert",
-    example: "5 miles in km",
+    label: t("Convert"),
+    example: tx("5 miles in km", "5英里等于多少公里"),
     icon: Ruler,
     signals: [],
     summary: (d) =>
       d.value !== null && d.from && d.to && d.result !== null
         ? `${d.value} ${UNIT_LABELS[d.from] ?? d.from} = ${Number(d.result.toFixed(2))} ${UNIT_LABELS[d.to] ?? d.to}`
-        : "Conversion",
+        : t("Conversion"),
     Component: ConvertCard,
   },
   calc: {
-    label: "Calculate",
-    example: "18% of 3450",
+    label: t("Calculate"),
+    example: tx("18% of 3450", "3450的18%"),
     icon: Calculator,
     signals: [],
-    summary: (d) => (d.result !== null ? `${d.expression} = ${d.result.toLocaleString("en-US")}` : d.expression),
+    summary: (d) => (d.result !== null ? `${d.expression} = ${formatNumber(d.result)}` : d.expression),
     Component: CalcCard,
   },
   travel: {
-    label: "Trip",
-    example: "flight to goa next weekend",
+    label: t("Trip"),
+    example: tx("flight to goa next weekend", "下周末去三亚"),
     icon: TRANSPORT_ICON.flight,
     signals: ["transport", "tripType"],
     headerIcon: (s) => TRANSPORT_ICON[s.transport ?? "unspecified"],
     badges: (s) =>
       s.tripType === "work"
-        ? [{ id: "work", label: "Work", icon: Briefcase }]
+        ? [{ id: "work", label: t("Work"), icon: Briefcase }]
         : s.tripType === "leisure"
-          ? [{ id: "leisure", label: "Leisure", icon: Sun }]
+          ? [{ id: "leisure", label: t("Leisure"), icon: Sun }]
           : [],
-    summary: (d) => (d.destination ? `Trip to ${d.destination}` : "Trip"),
+    summary: (d) => (d.destination ? (isZh ? `去${d.destination}` : `Trip to ${d.destination}`) : t("Trip")),
     Component: TravelCard,
   },
   poll: {
-    label: "Poll",
-    example: "pizza or burgers for friday?",
+    label: t("Poll"),
+    example: tx("pizza or burgers for friday?", "周五吃披萨还是汉堡？"),
     icon: Vote,
     signals: ["hasExplicitOptions"],
-    summary: (d) => d.title || d.options.join(" / ") || "Poll",
+    summary: (d) => d.title || d.options.join(" / ") || t("Poll"),
     Component: PollCard,
   },
   contact: {
-    label: "Contact",
-    example: "rahul 98200 12345 rahul@mail.com",
+    label: t("Contact"),
+    example: tx("rahul 98200 12345 rahul@mail.com", "李雷 13800138000 lilei@mail.com"),
     icon: Contact,
     signals: [],
-    summary: (d) => [d.name || "Contact", d.phone ?? d.email].filter(Boolean).join(" · "),
+    summary: (d) => [d.name || t("Contact"), d.phone ?? d.email].filter(Boolean).join(" · "),
     Component: ContactCard,
   },
   link: {
-    label: "Bookmark",
-    example: "https://vercel.com/blog check later",
+    label: t("Bookmark"),
+    example: tx("https://vercel.com/blog check later", "https://vercel.com/blog 稍后看"),
     icon: Link2,
     signals: [],
-    summary: (d) => [d.domain ?? "Link", d.note].filter(Boolean).join(" · "),
+    summary: (d) => [d.domain ?? t("Link"), d.note].filter(Boolean).join(" · "),
     Component: LinkCard,
   },
   countdown: {
-    label: "Countdown",
-    example: "days until christmas",
+    label: t("Countdown"),
+    example: tx("days until christmas", "12月25日还有多少天"),
     icon: CalendarClock,
     signals: [],
     summary: (d) =>
-      d.days === null ? d.title || "Countdown" : d.days === 0 ? `${d.title || "It"} is today` : `${Math.abs(d.days)} days ${d.days < 0 ? "since" : "until"} ${d.title || "then"}`,
+      d.days === null
+        ? d.title || t("Countdown")
+        : d.days === 0
+          ? isZh
+            ? `今天${d.title ? `：${d.title}` : ""}`
+            : `${d.title || "It"} is today`
+          : formatRemaining(d.days, d.title || t("then")),
     Component: CountdownCard,
   },
   timezone: {
-    label: "Time zone",
-    example: "3pm pst in ist",
+    label: t("Time zone"),
+    example: tx("3pm pst in ist", "北京下午3点换成纽约时间"),
     icon: Globe,
     signals: [],
     summary: (d) =>
-      d.to && d.instant ? `${formatIn(d.from.tz, d.instant)} ${d.from.label} → ${formatIn(d.to.tz, d.instant)} ${d.to.label}` : "Time zones",
+      d.to && d.instant
+        ? `${formatZoneTime(d.from.tz, d.instant)} ${d.from.label} → ${formatZoneTime(d.to.tz, d.instant)} ${d.to.label}`
+        : t("Time zones"),
     Component: TimezoneCard,
   },
   random: {
-    label: "Random",
-    example: "roll 2d6",
+    label: t("Random"),
+    example: tx("roll 2d6", "掷2个骰子"),
     icon: Dices,
     signals: [],
     summary: (d) => describeRandom(d),
     Component: RandomCard,
   },
   goal: {
-    label: "Goal",
-    example: "read 12 books this year, 4 done",
+    label: t("Goal"),
+    example: tx("read 12 books this year, 4 done", "今年读12本书，已读4本"),
     icon: Target,
     signals: [],
-    summary: (d) => (d.target ? `${d.title || "Goal"} · ${d.current}/${d.target}${d.unit ? ` ${d.unit}` : ""}` : d.title || "Goal"),
+    summary: (d) => (d.target ? `${d.title || t("Goal")} · ${d.current}/${d.target}${d.unit ? ` ${d.unit}` : ""}` : d.title || t("Goal")),
     Component: GoalCard,
   },
   note: {
-    label: "Note",
-    example: "the city felt so quiet this morning",
+    label: t("Note"),
+    example: tx("the city felt so quiet this morning", "今天早上城市特别安静"),
     icon: StickyNote,
     signals: ["tone", "isQuestion"],
     // The edge color is always paired with a tone word in the header, never color alone.
-    headerLabel: (s) => (s.tone ? TONE_LABEL[s.tone] : "Note"),
+    headerLabel: (s) => t(s.tone ? TONE_LABEL[s.tone] : "Note"),
     edge: (s) => (s.tone ? TONE_EDGE[s.tone] : null),
     summary: (d) => d.title,
     Component: NoteCard,

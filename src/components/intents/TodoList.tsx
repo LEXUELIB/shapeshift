@@ -4,8 +4,10 @@ import { motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { TodoData } from "@/lib/parse/todo";
+import { t } from "@/lib/i18n";
 import { easeOut, spring, tween } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { connector } from "./display";
 import { Placeholder } from "./shared";
 import type { CardProps } from "./types";
 
@@ -47,7 +49,7 @@ export function TodoList({ data, interactive }: CardProps<TodoData>) {
         );
       })}
       <li className="flex h-10 items-center">
-        <Placeholder insert=", ">Add item</Placeholder>
+        <Placeholder insert={connector("list")}>{t("Add item")}</Placeholder>
       </li>
     </ul>
   );

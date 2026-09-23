@@ -7,6 +7,7 @@ import { useDemoScript } from "@/hooks/useDemoScript";
 import { useIntent } from "@/hooks/useIntent";
 import { activeIntent, type DecideMemory, decide, force, initialMemory, promote } from "@/lib/decide";
 import type { CardIntent, IntentResult } from "@/lib/jev/types";
+import { isZh, t } from "@/lib/i18n";
 import { spring, tween } from "@/lib/motion";
 import { parseFor, parsers } from "@/lib/parse";
 import { type GatedSignals, gateSignals, neutralGated } from "@/lib/signals";
@@ -24,8 +25,13 @@ import { MorphContainer } from "./MorphContainer";
 import { RecentStack } from "./RecentStack";
 import { newId, type SavedItem, savedItems } from "@/lib/savedItems";
 import { notify } from "@/lib/notify";
+import { lower } from "@/components/intents/display";
 
 const subscribeNoop = () => () => {};
+
+/** Screen-reader announcements: "Added event: Dinner" / "已添加日程：Dinner". */
+const announce = (verb: string, label: string, summary: string) =>
+  isZh ? `${verb}${label}：${summary}` : `${verb} ${lower(label)}: ${summary}`;
 
 function useSearchFlags() {
   const search = useSyncExternalStore(
@@ -117,7 +123,7 @@ export function Shapeshift() {
 
   // Announce commits (and completions) for screen readers.
   const committedIntent = ui.kind === "committed" ? ui.intent : null;
-  const liveMessage = committedIntent ? `Showing ${registry[committedIntent].label.toLowerCase()} card` : announcement;
+  const liveMessage = committedIntent ? `${t("Showing")} ${registry[committedIntent].label}` : announcement;
 
   /** Clear the input. When editing a saved item, it returns to the list unchanged. */
   const reset = () => {
@@ -139,11 +145,11 @@ export function Shapeshift() {
     if (editingId !== null) {
       // Save edits in place, keeping the item's position in the list.
       savedItems.update((list) => list.map((x) => (x.id === editingId ? { ...x, intent: target, summary, text } : x)));
-      setAnnouncement(`Updated ${registry[target].label.toLowerCase()}: ${summary}`);
+      setAnnouncement(announce(t("Updated"), registry[target].label, summary));
     } else {
       const item: SavedItem = { id: draftId, intent: target, summary, text, createdAt: Date.now() };
       savedItems.update((list) => (flags.demo ? [item, ...list].slice(0, 9) : [item, ...list])); // demo list is in-memory
-      setAnnouncement(`Added ${registry[target].label.toLowerCase()}: ${summary}`);
+      setAnnouncement(announce(t("Added"), registry[target].label, summary));
     }
     setFlyingId(editingId ?? draftId);
     // Saving with the button (or a card control) keeps you in flow: focus returns to the input.
@@ -175,12 +181,12 @@ export function Shapeshift() {
   const remove = (item: SavedItem) => {
     const index = savedItems.getSnapshot().findIndex((x) => x.id === item.id);
     savedItems.update((list) => list.filter((x) => x.id !== item.id));
-    setAnnouncement(`Deleted ${registry[item.intent].label.toLowerCase()}: ${item.summary}`);
+    setAnnouncement(announce(t("Deleted"), registry[item.intent].label, item.summary));
     notify(item.summary, {
-      lead: "Deleted",
+      lead: t("Deleted"),
       id: "deleted",
       action: {
-        label: "Undo",
+        label: t("Undo"),
         onClick: () =>
           savedItems.update((list) => {
             if (list.some((x) => x.id === item.id)) return list;
@@ -304,7 +310,7 @@ export function Shapeshift() {
               onCompositionEnd={() => {
                 composing.current = false;
               }}
-              aria-label="Type anything"
+              aria-label={t("Type anything")}
               aria-describedby="shapeshift-hint"
               autoComplete="off"
               autoCorrect="off"
@@ -354,7 +360,7 @@ export function Shapeshift() {
         <RecentStack items={saved.filter((x) => x.id !== editingId)} flyingId={flyingId} onOpen={reopen} onDelete={remove} />
 
         <p id="shapeshift-hint" className="sr-only">
-          Type anything. Enter adds the card, Escape clears, Tab keeps a preview, slash opens every card type.
+          {t("Type anything. Enter adds the card, Escape clears, Tab keeps a preview, slash opens every card type.")}
         </p>
         <div role="status" aria-live="polite" className="sr-only">
           {liveMessage}

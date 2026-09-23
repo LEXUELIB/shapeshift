@@ -6,7 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { TimerData } from "@/lib/parse/timer";
 import { formatClock } from "@/lib/parse/timer";
+import { isZh, t } from "@/lib/i18n";
 import { spring } from "@/lib/motion";
+import { connector } from "./display";
 import { Field, Meta, Placeholder } from "./shared";
 import type { CardProps } from "./types";
 
@@ -76,18 +78,18 @@ export function TimerRing({ data, signals, interactive }: CardProps<TimerData>) 
       </Field>
       <Field index={1} className="flex min-w-0 flex-col gap-3">
         <div className="flex flex-col gap-0.5">
-          <h2 className="text-[17px] leading-6 font-[550] text-balance">{data.label || (stopwatch ? "Stopwatch" : "Timer")}</h2>
-          {data.seconds ? <Meta>{describe(data.seconds)}</Meta> : <Placeholder insert=" 10 min">Add duration</Placeholder>}
+          <h2 className="text-[17px] leading-6 font-[550] text-balance">{data.label || t(stopwatch ? "Stopwatch" : "Timer")}</h2>
+          {data.seconds ? <Meta>{describe(data.seconds)}</Meta> : <Placeholder insert={connector("duration")}>{t("Add duration")}</Placeholder>}
         </div>
         <div className="flex gap-2">
           <Button size="sm" disabled={!interactive || (!stopwatch && elapsed >= total)} onClick={() => setRunning((r) => !r)}>
             {running ? <Pause /> : <Play />}
-            {running ? "Pause" : elapsed > 0 ? "Resume" : "Start"}
+            {t(running ? "Pause" : elapsed > 0 ? "Resume" : "Start")}
           </Button>
           <Button
             size="icon-sm"
             variant="ghost"
-            aria-label="Reset"
+            aria-label={t("Reset")}
             disabled={!interactive || elapsed === 0}
             onClick={() => {
               setRunning(false);
@@ -106,5 +108,6 @@ function describe(s: number) {
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
+  if (isZh) return [h && `${h} 小时`, m && `${m} 分`, sec && `${sec} 秒`].filter(Boolean).join(" ");
   return [h && `${h} hr`, m && `${m} min`, sec && `${sec} sec`].filter(Boolean).join(" ");
 }

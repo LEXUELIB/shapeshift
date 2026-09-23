@@ -3,7 +3,9 @@
 import { motion, useReducedMotion } from "motion/react";
 import { Progress } from "@/components/ui/progress";
 import type { PollData } from "@/lib/parse/poll";
+import { isZh, t } from "@/lib/i18n";
 import { spring, tween } from "@/lib/motion";
+import { connector } from "./display";
 import { Field, Placeholder } from "./shared";
 import type { CardProps } from "./types";
 
@@ -14,7 +16,7 @@ export function PollCard({ data, signals }: CardProps<PollData>) {
   return (
     <div className="flex flex-col gap-2">
       <Field index={0}>
-        <h2 className="text-[17px] leading-6 font-[550] text-balance">{data.title || "Ask the group"}</h2>
+        <h2 className="text-[17px] leading-6 font-[550] text-balance">{data.title || t("Ask the group")}</h2>
       </Field>
       <div className="flex flex-col">
         {options.map((o, i) => (
@@ -27,15 +29,15 @@ export function PollCard({ data, signals }: CardProps<PollData>) {
             className="flex min-h-10 flex-col justify-center gap-1.5 py-1"
           >
             <div className="flex items-center justify-between text-[15px] leading-5">
-              <span className={o ? "" : "text-muted-foreground"}>{o || `Option ${i + 1}`}</span>
-              <span className="text-[13px] font-medium text-muted-foreground tabular-nums">0%</span>
+              <span className={o ? "" : "text-muted-foreground"}>{o || `${t("Option")} ${i + 1}`}</span>
+              <span className="text-[13px] font-medium text-muted-foreground tabular-nums">{t("0%")}</span>
             </div>
-            <Progress value={0} className="h-1 bg-secondary" aria-label={`${o || `Option ${i + 1}`} votes`} />
+            <Progress value={0} className="h-1 bg-secondary" aria-label={isZh ? `${o || `${t("Option")} ${i + 1}`} 得票` : `${o || `Option ${i + 1}`} votes`} />
           </motion.div>
         ))}
       </div>
       <div className="flex h-10 items-center">
-        <Placeholder insert=" or ">Add option</Placeholder>
+        <Placeholder insert={connector("or")}>{t("Add option")}</Placeholder>
       </div>
     </div>
   );

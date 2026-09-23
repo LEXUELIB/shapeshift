@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { registry } from "@/components/intents/registry";
 import type { CardIntent } from "@/lib/jev/types";
+import { t } from "@/lib/i18n";
 import { spring, tween } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +20,7 @@ export function IntentChips({
 }) {
   const reduce = useReducedMotion();
   return (
-    <div className="flex h-11 items-start justify-center gap-2 pt-3" role="group" aria-label="Did you mean"
+    <div className="flex h-11 items-start justify-center gap-2 pt-3" role="group" aria-label={t("Did you mean")}
       aria-describedby={options ? "chips-hint" : undefined}>
       <AnimatePresence mode="popLayout">
         {options?.map((intent, i) => {
@@ -51,7 +52,7 @@ export function IntentChips({
       </AnimatePresence>
       {options && (
         <span id="chips-hint" className="sr-only">
-          Left and right arrows highlight a choice, Enter picks it.
+          {t("Left and right arrows highlight a choice, Enter picks it.")}
         </span>
       )}
     </div>

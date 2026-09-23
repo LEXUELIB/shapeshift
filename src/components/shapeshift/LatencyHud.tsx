@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatedNumber } from "@/components/intents/shared";
+import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export function LatencyHud({
@@ -25,7 +26,7 @@ export function LatencyHud({
       )}
       aria-hidden
     >
-      {cached ? "cached" : <AnimatedNumber value={latency} format={(n) => `${Math.round(n)}ms`} />} · {questions}q · {model}
+      {cached ? t("cached") : <AnimatedNumber value={latency} format={(n) => `${Math.round(n)}ms`} />} · {questions}q · {model}
     </div>
   );
 }

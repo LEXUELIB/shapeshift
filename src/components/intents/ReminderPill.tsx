@@ -2,6 +2,7 @@
 
 import { Clock } from "lucide-react";
 import type { ReminderData } from "@/lib/parse/reminder";
+import { t } from "@/lib/i18n";
 import { Chip, Field, formatWhen, Missing } from "./shared";
 import type { CardProps } from "./types";
 
@@ -12,7 +13,7 @@ export function ReminderPill({ data }: CardProps<ReminderData>) {
       {data.task ? (
         <h2 className="min-w-0 text-[17px] leading-6 font-[550] tracking-[-0.01em] text-pretty break-words">{data.task}</h2>
       ) : (
-        <Missing>No task yet</Missing>
+        <Missing>{t("No task yet")}</Missing>
       )}
       {when ? (
         <Chip icon={Clock} className="shrink-0">
@@ -20,7 +21,7 @@ export function ReminderPill({ data }: CardProps<ReminderData>) {
         </Chip>
       ) : (
         <Chip icon={Clock} className="shrink-0 text-muted-foreground">
-          Anytime
+          {t("Anytime")}
         </Chip>
       )}
     </Field>

@@ -1,10 +1,11 @@
 "use client";
 
 import type { CalcData } from "@/lib/parse/calc";
+import { formatNumber } from "./display";
 import { AnimatedNumber, Field, HeroNumber, Meta } from "./shared";
 import type { CardProps } from "./types";
 
-const fmt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: Math.abs(n) < 1 ? 6 : 4 });
+const fmt = (n: number) => formatNumber(n, { maximumFractionDigits: Math.abs(n) < 1 ? 6 : 4 });
 
 export function CalcCard({ data }: CardProps<CalcData>) {
   return (
